@@ -7,26 +7,23 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.springframework.lang.NonNull;
-
 @Entity
-@Table(name="BookInfo")
+@Table(name="book_info")
 public class Book {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name="book_id")
 	private Integer Id;
 	
-	@Column
-	@NonNull
-	
+	@Column(name="book_name")
 	private String Name;
-	@Column
-	@NonNull
-	private String Author;
-	@Column
-	@NonNull
 	
+	@Column(name="book_author")
+	private String Author;
+	
+	
+	@Column(name="book_price")
 	private Integer price;
 	
 	public Book( ) {

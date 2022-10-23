@@ -1,0 +1,1 @@
+insert into book_info(book_name,book_author,book_price)values('C','Balguruswami',500);
