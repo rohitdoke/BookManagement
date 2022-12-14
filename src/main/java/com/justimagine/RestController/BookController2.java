@@ -20,20 +20,21 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.justimagine.Entity.Book;
+import com.justimagine.Exception.NoSuchBookExistsException;
 import com.justimagine.Service.IBookService;
 import com.justimagine.Service.IGenerateBookReportService;
 
 @RestController
 @RequestMapping("/book")
-class BookController {
+class BookController2 {
 	
-	private static final Logger log=LoggerFactory.getLogger(BookController.class);
+	private static final Logger log=LoggerFactory.getLogger(BookController2.class);
 	private final IBookService bookService;
 	
 	private final IGenerateBookReportService bookReport;
 
 	
-	public BookController(IBookService bookService, IGenerateBookReportService bookReport) {
+	public BookController2(IBookService bookService, IGenerateBookReportService bookReport) {
 		
 	
 		super();
@@ -41,137 +42,160 @@ class BookController {
 		this.bookReport = bookReport;
 	}
 	@PostMapping("/save")
-	public ResponseEntity<String>saveBook( @RequestBody   Book b)
+	public String saveBook( @RequestBody   Book b)
 	{
 		
 		log.info("saveBook Method is called");
-		try {
+		Boolean flag;
+		flag=(checkNullEmptyBlank(b.getName()) || checkNullEmptyBlank(b.getAuthor()));
+				
+				
+				if(flag!=true && b.getPrice()>0)
+				{
 			
 			
 			
 					bookService.saveBook(b);
-					log.info("saveBook method is executed");
-					return ResponseEntity.status(HttpStatus.CREATED).body("Record Saved Successfully");
 					
-		} catch (Exception e) {
-			log.info("Book are Not saved");
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("Record not Saved ");
-		}
+					log.info("saveBook method is executed");
+					return "Record Saved Successfully";
+				}
+				else
+				{
+					log.info("Book are Not saved");
+					throw new NoSuchBookExistsException("Please Enter Correct Info ");
+				}
+		
+			
 		
 		
 		
 	}
 	@PostMapping("/saveAll")
-	public ResponseEntity<String> saveAllBook(@RequestBody List<Book> b)
+	public String saveAllBook(@RequestBody List<Book> b)
 	{
 		log.info("saveAllBook method is Called");
 		
-		try {
+		Boolean CheckListFlag=false;
+		
+		for(Book b1:b)
+		{	
 			
+			Boolean CheckNullFlag=true;
+			
+			
+			if((CheckNullFlag==(checkNullEmptyBlank(b1.getName()))|| (CheckNullFlag==checkNullEmptyBlank(b1.getAuthor())) ||CheckNullFlag!=(b1.getPrice()>0)))
+			{
+				
+				CheckListFlag=true;
+				
+			}
+		
+		}
+		
+		if(CheckListFlag!=true)
+		{
+		
 			bookService.saveAllBook(b);
+			
 			log.info("saveAllBook method is executed");
-			return ResponseEntity.status(HttpStatus.CREATED).body("All list of Record Saves Successfully");
-		} catch (Exception e) {
+			 return "All Book are Saved Successfully";
+		}
+		else
+		{	
 			log.info(" Books aren't saved exception occured");
-			return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body("All Record Not Saved.");
+			throw new NoSuchBookExistsException("Please Enter Valid Info");
 		}
 	}
 	@GetMapping("/get/{id}")
-	public ResponseEntity<Book> getBookById(@PathVariable  Integer id)
+	public Book getBookById(@PathVariable  Integer id)
 
 	{
 		log.info("getBookById method is Called");
-
-		try {
+		if(id<=0)	
+		{
+			log.info("this is not Valid id");
+			throw new NoSuchBookExistsException("Enter Valid id");
 			
-			
-				
+		}
+		else
+		{	
+			log.info("getBookById method is executed");
 			 Book book = bookService.getBookById(id);
-			
 			 
-			 
-			 log.info("getBookById method is executed");
-			return ResponseEntity.ok(book);
-			
-			
-		} catch ( Exception e) {
-			
-			log.info("Book are not found By this id");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+			 return book;	 
 		}
 		
-		
-		
+			
+			
+	
 	}
 	@GetMapping("/getAll")
-	public ResponseEntity<List<Book>> getAllBook()
+	public List<Book> getAllBook()
 	{
 		log.info("getAllBook method is called");
-		try {
+		
 			
 			List<Book> allBook = bookService.getAllBook();
 			log.info("getAllBook  method is executed");
-			return ResponseEntity.ok(allBook);
+			if(allBook.isEmpty())
+			{
+				log.info("No Book present in  the database");
+				throw new NoSuchBookExistsException("Books are Not Present. ");
 					
-		} catch (Exception e) {
+			}
+			else
+			{
+				return allBook;
+			}
 			
-			log.info("No Book present in  the database");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		}
+			
 	
 		
 	}
 	
 	@PutMapping("/update") 
-	public ResponseEntity<String> UpdateBookById(@RequestBody Book b)
-	{log.info("UpdateBookbyId method is called");
-		
-		try {
+	public String UpdateBookById(@RequestBody Book b)
+	{
+		Boolean flag;
+		flag=(checkNullEmptyBlank(b.getName()) || checkNullEmptyBlank(b.getAuthor()));
+		if(  flag !=true && b.getPrice()>0 && b.getId()>0)
+		{
+			
 			bookService.UpdateBookById(b);
-			log.info("UpdateBookById method is executed");
-			return ResponseEntity.ok("Record Updated");
-		} catch (Exception e) {
-	
-			log.info("Book id is not found or Incorrect Details");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Record not found ");
+			return "book Saved Suceessfully";
 		}
-		
-		
+		else
+		{
+			throw new NoSuchBookExistsException("please enter Correct Info ");
+			
+		}	
 	}
 	
 	
 	@DeleteMapping("/delete/{id}")
-	public ResponseEntity<String> deletedById(@PathVariable(name="id") Integer id)
+	public String deletedById(@PathVariable(name="id") Integer id)
 	{
 		log.info(	"deleteById  method is called");
 		
-		try {
+		
 			bookService.deleteById(id);
 			log.info("deleteById method is executed");
-			return ResponseEntity.ok("Record deleted ID="+ id);
+			return "Record deleted ID="+ id;
 			
-		} catch (Exception e) {
-			
-			log.info("Book id not found to delete");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Record not found By this ID="+id);
-		}
+		
 	}
 	
 	@DeleteMapping("/deleteAll")
-	public ResponseEntity<String > delelteAllBook()
+	public String  delelteAllBook()
 	{
 		log.info("deleteAll method is calld");
-		try {
+		
 			
 			bookService.deleteAllBook();
 			log.info("deleteAll method is executed");
-			return ResponseEntity.ok("all Records are Deleted");
+			return "all Records are Deleted";
 			
-		} catch (Exception e) {
-			
-			log.info("Books are not present to delete");
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Records are not prensent");
-		}
 		
 		
 	}
@@ -201,7 +225,23 @@ class BookController {
 		}
           
     }
-	
+	public static Boolean checkNullEmptyBlank(String strToCheck) {  
+        
+	    if (strToCheck == null) {  
+	        return true;  
+	        }  
+	        
+	    else if(strToCheck.isEmpty()) {  
+	        return true;  
+	        }  
+	        
+	    else if(strToCheck.isBlank()) {  
+	        return true;  
+	        }  
+	    else {  
+	        return false;  
+	        }  
+	    }
 	
 	
 	
